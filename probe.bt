@@ -1,0 +1,51 @@
+#!/usr/bin/env bpftrace  
+BEGIN
+{
+   printf("[%s] Sentinel starting.Watching PID %d and its children...\n", strftime("%Y-%m-%d %H:%M:%S", nsecs), $1);
+   @watched[$1] = 1;
+}
+tracepoint:sched:sched_process_fork
+/@watched[args.parent_pid]/
+{
+    @watched[args.child_pid] = 1;
+    @spawn_count++;
+   printf("[%s] [SPAWN] pid %d spawned child pid %d\n", strftime("%Y-%m-%d %H:%M:%S", nsecs), args.parent_pid, args.child_pid);
+}
+
+tracepoint:sched:sched_process_exec
+/@watched[pid]/
+{
+    
+       printf("[%s] [EXEC] %s (pid %d)\n", strftime("%Y-%m-%d %H:%M:%S", nsecs), str(args.filename),pid);
+  
+}
+tracepoint:syscalls:sys_enter_openat
+/@watched[pid]/
+{
+    @open_count++;
+    printf("[%s] [OPEN] %s (pid %d) -> %s\n", strftime("%Y-%m-%d %H:%M:%S", nsecs), comm, pid,  str(args.filename));
+} 
+tracepoint:syscalls:sys_enter_connect
+/@watched[pid]/
+{ 
+    @connect_count++;
+    printf("[%s] [CONNECT] %s (pid %d) is opening a network connection\n", strftime("%Y-%m-%d %H:%M:%S", nsecs), comm, pid);
+}
+tracepoint:raw_syscalls:sys_enter
+/@watched[pid]/
+{
+   @syscalls[comm] = count();
+}
+
+END
+{   
+    printf("\n=== SENTINEL CASE SUMMARY  ===\n");
+    printf("child processes spawned: %d\n", @spawn_count);
+    printf("Files opened: %d\n", @open_count);
+    printf("Network connections attempted: %d\n", @connect_count);
+    printf("\nSyscall breakdown by process:\n");
+    print(@syscalls);
+    clear(@syscalls);
+    clear(@watched);
+ 
+}
