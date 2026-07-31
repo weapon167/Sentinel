@@ -44,3 +44,4 @@ python3 narrator.py sentinel_<timestamp>.log
 ```
 
 ## Example Output
+<img width="796" height="453" alt="image" src="https://github.com/user-attachments/assets/ce416173-fa95-479f-ab00-469ecd17aba9" />
