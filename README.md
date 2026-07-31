@@ -44,4 +44,5 @@ python3 narrator.py sentinel_<timestamp>.log
 ```
 
 ## Example Output
-![Narrator output screenshot](narrator.png)
+![Narrator output screenshot](screenshots/narrator.png)
+
